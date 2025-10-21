@@ -1,4 +1,4 @@
-````markdown name=README.md url=https://github.com/muhirwa45/Cardify/blob/4562750a0881660a072b819a3d747f23690ec3d5/README.md
+markdown name=README.md url=https://github.com/muhirwa45/Cardify/blob/4562750a0881660a072b819a3d747f23690ec3d5/README.md
 # Cardify
 
 View your app in AI Studio: https://ai.studio/apps/drive/1X7mj7Sj-no7myTjj9f47lbC8PikLVZGW
@@ -63,7 +63,7 @@ npm run preview
 - src/ — (application source) — open components and logic to understand how flashcards and any AI features are wired.
 
 Enjoy using Cardify!
-````
+
 
 
 View your app in AI Studio: https://ai.studio/apps/drive/1X7mj7Sj-no7myTjj9f47lbC8PikLVZGW
