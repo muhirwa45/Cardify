@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cardify - AI Flashcard App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            borderRadius: {
+              'app': '14px',
+            },
+            keyframes: {
+              'flip-horizontal': {
+                '50%': { transform: 'rotateY(180deg)' },
+              },
+              'flip-in': {
+                '0%': { transform: 'rotateY(180deg) scale(0.8)', opacity: 0 },
+                '100%': { transform: 'rotateY(0deg) scale(1)', opacity: 1 },
+              },
+              'flip-out': {
+                '0%': { transform: 'rotateY(0deg) scale(1)', opacity: 1 },
+                '100%': { transform: 'rotateY(-180deg) scale(0.8)', opacity: 0 },
+              }
+            },
+            animation: {
+               'flip-in': 'flip-in 0.5s ease-in-out forwards',
+               'flip-out': 'flip-out 0.5s ease-in-out forwards',
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-slate-100 dark:bg-slate-900">
+    <div id="root"></div>
+  </body>
+</html>

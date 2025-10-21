@@ -1,0 +1,5 @@
+{
+  "name": "Cardify - offline  Flashcard App",
+  "description": "A modern flashcard application designed for efficient learning through Spaced Repetition. Create decks by importing from files (CSV, TXT). Features a beautiful interface, card-flipping animations, a study heatmap, and a calendar to track your progress.",
+  "requestFramePermissions": []
+}
