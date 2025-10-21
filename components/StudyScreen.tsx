@@ -65,7 +65,9 @@ const CreateDeckModal: React.FC<CreateDeckModalProps> = ({ isOpen, onClose, onSa
         }
         setIsGenerating(true);
         try {
-            const generatedText = await generateCardsFromTopic(aiTopic, 10);
+            // Fix: Adapt to the service now returning an array of card objects.
+            const generatedCards = await generateCardsFromTopic(aiTopic, 10);
+            const generatedText = generatedCards.map(card => `${card.front};${card.back}`).join('\n');
             setCardsText(prev => prev ? `${prev}\n${generatedText}` : generatedText);
             setAiTopic('');
         } catch (error) {

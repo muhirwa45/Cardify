@@ -1,8 +1,10 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
 
-export const generateCardsFromTopic = async (topic: string, count: number): Promise<string> => {
+// Fix: Updated function to return a promise with an array of card objects for better type safety.
+export const generateCardsFromTopic = async (topic: string, count: number): Promise<{ front: string; back: string }[]> => {
     try {
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
@@ -40,10 +42,11 @@ export const generateCardsFromTopic = async (topic: string, count: number): Prom
         const result = JSON.parse(jsonString);
 
         if (result.cards && Array.isArray(result.cards)) {
-            return result.cards.map((card: { front: string; back: string }) => `${card.front};${card.back}`).join('\n');
+            // Fix: Return the array of cards directly.
+            return result.cards;
         }
 
-        return '';
+        return [];
     } catch (error) {
         console.error("Error generating cards with Gemini:", error);
         throw new Error("Failed to generate flashcards. Please check the topic and try again.");
