@@ -2,7 +2,8 @@
 
 Cardify is a modern, offline-first flashcard application designed for efficient learning through a Spaced Repetition System (SRS). It allows you to create, manage, and study flashcard decks with a beautiful, responsive interface. All your data is stored locally in your browser, ensuring you can study anytime, anywhere, without an internet connection.
 
-![Cardify Screenshot](https://storage.googleapis.com/aistudio-hosting/workspace-images/cardify-screenshot.png)
+<img width="584" height="463" alt="image" src="https://github.com/user-attachments/assets/e9aa701d-7dc8-462d-b639-92851916c38f" />
+
 
 ## ✨ Key Features
 
