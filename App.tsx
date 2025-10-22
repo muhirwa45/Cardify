@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Deck, Card, View } from './types';
+import type { Deck, Card, View, Theme } from './types';
 import { HomeScreen } from './components/HomeScreen';
 import { StudyScreen } from './components/StudyScreen';
 import { SettingsScreen } from './components/SettingsScreen';
@@ -42,6 +43,15 @@ const App: React.FC = () => {
   });
   const [view, setView] = useState<View>('home');
   const [activeStudyDeck, setActiveStudyDeck] = useState<Deck | null>(null);
+  const [theme, setTheme] = useState<Theme>(() => {
+    try {
+      const savedTheme = localStorage.getItem('flashcard-theme');
+      return (savedTheme as Theme) || 'light';
+    } catch (error) {
+      console.error("Failed to parse theme from localStorage", error);
+      return 'light';
+    }
+  });
 
   useEffect(() => {
     try {
@@ -50,6 +60,39 @@ const App: React.FC = () => {
       console.error("Failed to save decks to localStorage", error);
     }
   }, [decks]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('flashcard-theme', theme);
+      const root = window.document.documentElement;
+      
+      root.classList.remove('dark');
+      root.removeAttribute('data-theme');
+
+      switch(theme) {
+        case 'dark':
+          root.classList.add('dark');
+          break;
+        case 'dark-blue':
+          root.classList.add('dark');
+          root.setAttribute('data-theme', 'dark-blue');
+          break;
+        case 'green':
+          root.setAttribute('data-theme', 'green');
+          break;
+        case 'yellow':
+          root.setAttribute('data-theme', 'yellow');
+          break;
+        case 'light':
+        default:
+          // 'light' is the default, no class or attribute needed
+          break;
+      }
+    } catch (error) {
+      console.error("Failed to save theme to localStorage", error);
+    }
+  }, [theme]);
+
 
   const handleAddDeck = useCallback((newDeck: Deck) => {
     setDecks(prevDecks => [...prevDecks, newDeck]);
@@ -98,14 +141,14 @@ const App: React.FC = () => {
       case 'study':
         return <StudyScreen decks={decks} onAddDeck={handleAddDeck} onUpdateDeck={handleUpdateDeck} onStartStudy={handleStartStudy} onDeleteDeck={handleDeleteDeck} />;
       case 'settings':
-        return <SettingsScreen />;
+        return <SettingsScreen currentTheme={theme} onThemeChange={setTheme} />;
       default:
         return <HomeScreen decks={decks} onStartStudy={handleStartStudy} />;
     }
   };
 
   return (
-    <div className="bg-slate-100 dark:bg-slate-900 min-h-screen text-slate-900 dark:text-slate-100 font-sans">
+    <div className="bg-background min-h-screen text-text-base font-sans">
         <main className="max-w-4xl mx-auto px-4 py-8 pb-24">
             {renderContent()}
         </main>

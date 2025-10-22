@@ -11,6 +11,7 @@ const Heatmap: React.FC = () => {
     const today = new Date();
     const squares = useMemo(() => {
         const endDate = new Date(today);
+        // Start of the week is Sunday (day 0)
         endDate.setDate(endDate.getDate() + (6 - today.getDay())); 
         const startDate = new Date(endDate);
         startDate.setDate(startDate.getDate() - 365);
@@ -29,21 +30,28 @@ const Heatmap: React.FC = () => {
     }, [today]);
 
     const getColor = (intensity: number) => {
-        if (intensity === 0) return 'bg-slate-200 dark:bg-slate-700';
-        if (intensity < 0.4) return 'bg-sky-200 dark:bg-sky-800';
-        if (intensity < 0.7) return 'bg-sky-400 dark:bg-sky-600';
-        return 'bg-sky-600 dark:bg-sky-400';
+        if (intensity === 0) return 'bg-border';
+        if (intensity < 0.4) return 'bg-primary/20';
+        if (intensity < 0.7) return 'bg-primary/60';
+        return 'bg-primary';
     };
 
     return (
-        <div className="grid grid-cols-[repeat(53,minmax(0,1fr))] grid-rows-7 gap-1">
-            {squares.map(({ date, intensity }, index) => (
-                <div 
-                    key={index} 
-                    className={`w-full aspect-square rounded-[3px] ${getColor(intensity)}`}
-                    title={`Studied on ${date.toDateString()}`}
-                />
-            ))}
+        <div className="flex gap-3 items-stretch">
+            <div className="flex flex-col justify-between text-xs text-text-muted py-1 shrink-0">
+                <span>Mon</span>
+                <span>Wed</span>
+                <span>Fri</span>
+            </div>
+            <div className="grid grid-cols-[repeat(53,minmax(0,1fr))] grid-rows-7 gap-1 w-full">
+                {squares.map(({ date, intensity }, index) => (
+                    <div 
+                        key={index} 
+                        className={`w-full aspect-square rounded-[3px] ${getColor(intensity)}`}
+                        title={`Studied on ${date.toDateString()}`}
+                    />
+                ))}
+            </div>
         </div>
     );
 };
@@ -64,49 +72,57 @@ const Calendar: React.FC<{ decks: Deck[] }> = ({ decks }) => {
         return dates;
     }, [decks]);
 
-    const handlePrevMonth = () => {
-        setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+    const handlePrevWeek = () => {
+        setCurrentDate(prev => {
+            const newDate = new Date(prev);
+            newDate.setDate(newDate.getDate() - 7);
+            return newDate;
+        });
     };
 
-    const handleNextMonth = () => {
-        setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+    const handleNextWeek = () => {
+        setCurrentDate(prev => {
+            const newDate = new Date(prev);
+            newDate.setDate(newDate.getDate() + 7);
+            return newDate;
+        });
     };
     
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDayOfMonth = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay()); // Sunday
 
-    const monthName = currentDate.toLocaleString('default', { month: 'long' });
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+        const day = new Date(startOfWeek);
+        day.setDate(day.getDate() + i);
+        return day;
+    });
+
+    const weekRangeString = `${weekDays[0].toLocaleString('default', { month: 'short', day: 'numeric' })} - ${weekDays[6].toLocaleString('default', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     const today = new Date();
 
-    const blanks = Array(firstDayOfMonth).fill(null);
-    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-
     return (
-        <div className="bg-white dark:bg-slate-800 p-4 rounded-app shadow-sm">
+        <div className="bg-card p-4 rounded-app shadow-sm">
             <div className="flex justify-between items-center mb-4">
-                <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 font-mono" aria-label="Previous month">&lt;</button>
-                <h3 className="font-semibold text-lg">{monthName} {year}</h3>
-                <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 font-mono" aria-label="Next month">&gt;</button>
+                <button onClick={handlePrevWeek} className="p-2 rounded-full hover:bg-background dark:hover:bg-border font-mono" aria-label="Previous week">&lt;</button>
+                <h3 className="font-semibold text-base md:text-lg text-center">{weekRangeString}</h3>
+                <button onClick={handleNextWeek} className="p-2 rounded-full hover:bg-background dark:hover:bg-border font-mono" aria-label="Next week">&gt;</button>
             </div>
             <div className="grid grid-cols-7 gap-y-2 text-center text-sm">
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="font-medium text-slate-500 text-xs">{day}</div>
+                    <div key={day} className="font-medium text-text-muted text-xs">{day}</div>
                 ))}
-                {blanks.map((_, i) => <div key={`blank-${i}`}></div>)}
-                {days.map(day => {
-                    const dayDate = new Date(year, month, day);
+                {weekDays.map(dayDate => {
+                    const day = dayDate.getDate();
                     const isToday = dayDate.toDateString() === today.toDateString();
                     const hasDueCards = dueDates.has(dayDate.toDateString());
 
                     let dayClasses = "w-9 h-9 flex items-center justify-center rounded-full mx-auto transition-colors ";
                     if (isToday) {
-                        dayClasses += "bg-sky-500 text-white font-bold ";
+                        dayClasses += "bg-primary text-primary-content font-bold ";
                     } else if (hasDueCards) {
-                        dayClasses += "bg-sky-100 dark:bg-sky-900/50 text-sky-700 dark:text-sky-300 font-semibold";
+                        dayClasses += "bg-primary-light dark:bg-primary/20 text-primary-hover dark:text-primary font-semibold";
                     } else {
-                        dayClasses += "text-slate-700 dark:text-slate-300 ";
+                        dayClasses += "text-text-base ";
                     }
 
                     return (
@@ -145,50 +161,50 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ decks, onStartStudy }) =
     return (
         <div className="space-y-8">
             <header>
-                <h1 className="text-3xl font-bold text-slate-800 dark:text-white">{getGreeting()}</h1>
-                <p className="text-slate-500 dark:text-slate-400">Ready for another study session?</p>
+                <h1 className="text-3xl font-bold text-text-base">{getGreeting()}</h1>
+                <p className="text-text-muted">Ready for another study session?</p>
                 {totalDueCards > 0 && (
-                    <div className="mt-4 bg-sky-100 dark:bg-sky-900/50 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200 p-3 rounded-app text-center">
+                    <div className="mt-4 bg-primary-light dark:bg-primary/20 border border-primary/20 text-primary-hover dark:text-primary p-3 rounded-app text-center">
                         You have <span className="font-bold">{totalDueCards}</span> card{totalDueCards === 1 ? '' : 's'} due for review today.
                     </div>
                 )}
             </header>
             
-            <section className="bg-white dark:bg-slate-800 p-4 rounded-app shadow-sm">
-                <h2 className="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">Study Activity</h2>
-                <Heatmap />
-            </section>
-
-            <section>
-                <h2 className="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">Recent Decks</h2>
+             <section>
+                <h2 className="text-lg font-semibold mb-3 text-text-base">Recent Decks</h2>
                 {decks.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {decks.slice(0, 4).map(deck => (
-                            <div key={deck.id} className="bg-white dark:bg-slate-800 p-4 rounded-app shadow-sm flex items-center justify-between">
+                            <div key={deck.id} className="bg-card p-4 rounded-app shadow-sm flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
                                     <div className={`w-10 h-10 rounded-full ${deck.color} flex items-center justify-center`}>
                                         <BrainCircuitIcon className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="font-semibold text-slate-800 dark:text-white">{deck.name}</h3>
-                                        <p className="text-sm text-slate-500">{deck.cards.length} cards</p>
+                                        <h3 className="font-semibold text-text-base">{deck.name}</h3>
+                                        <p className="text-sm text-text-muted">{deck.cards.length} cards</p>
                                     </div>
                                 </div>
-                                <button onClick={() => onStartStudy(deck)} className="bg-sky-500 text-white px-4 py-2 rounded-app font-semibold hover:bg-sky-600 transition-colors">
+                                <button onClick={() => onStartStudy(deck)} className="bg-primary text-primary-content px-4 py-2 rounded-app font-semibold hover:bg-primary-hover transition-colors">
                                     Study
                                 </button>
                             </div>
                         ))}
                     </div>
                 ) : (
-                    <div className="text-center py-10 px-4 bg-white dark:bg-slate-800 rounded-app">
-                        <p className="text-slate-500">No decks yet. Go to the Study tab to create one!</p>
+                    <div className="text-center py-10 px-4 bg-card rounded-app">
+                        <p className="text-text-muted">No decks yet. Go to the Study tab to create one!</p>
                     </div>
                 )}
             </section>
+            
+            <section className="bg-card p-4 rounded-app shadow-sm">
+                <h2 className="text-lg font-semibold mb-3 text-text-base">Study Activity</h2>
+                <Heatmap />
+            </section>
 
             <section>
-                <h2 className="text-lg font-semibold mb-3 text-slate-700 dark:text-slate-200">Study Calendar</h2>
+                <h2 className="text-lg font-semibold mb-3 text-text-base">Study Calendar</h2>
                 <Calendar decks={decks} />
             </section>
         </div>

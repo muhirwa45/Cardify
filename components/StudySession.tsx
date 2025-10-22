@@ -20,11 +20,11 @@ const Flashcard: React.FC<FlashcardProps> = ({ card, isFlipped, onFlip }) => {
         className={`relative w-full h-full transition-transform duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}
         onClick={onFlip}
       >
-        <div className="absolute w-full h-full backface-hidden bg-white dark:bg-slate-800 rounded-app shadow-lg flex items-center justify-center p-6 text-center">
-          <p className="text-2xl font-semibold text-slate-800 dark:text-slate-100">{card.front}</p>
+        <div className="absolute w-full h-full backface-hidden bg-card rounded-app shadow-lg flex items-center justify-center p-6 text-center">
+          <p className="text-2xl font-semibold text-text-base">{card.front}</p>
         </div>
-        <div className="absolute w-full h-full backface-hidden bg-white dark:bg-slate-700 rounded-app shadow-lg flex items-center justify-center p-6 text-center rotate-y-180">
-          <p className="text-xl text-slate-700 dark:text-slate-200">{card.back}</p>
+        <div className="absolute w-full h-full backface-hidden bg-card dark:bg-border rounded-app shadow-lg flex items-center justify-center p-6 text-center rotate-y-180">
+          <p className="text-xl text-text-base">{card.back}</p>
         </div>
       </div>
     </div>
@@ -110,10 +110,10 @@ export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSes
 
   if (sessionQueue.length === 0 && !isComplete) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 dark:bg-slate-900 p-4">
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
              <h2 className="text-2xl font-bold mb-2">{deck.name}</h2>
-             <p className="text-slate-500 mb-6">No cards are due for review in this deck today.</p>
-             <button onClick={handleEndSession} className="bg-sky-500 text-white px-6 py-3 rounded-app font-semibold hover:bg-sky-600 transition-colors">
+             <p className="text-text-muted mb-6">No cards are due for review in this deck today.</p>
+             <button onClick={handleEndSession} className="bg-primary text-primary-content px-6 py-3 rounded-app font-semibold hover:bg-primary-hover transition-colors">
                 Back to Decks
             </button>
         </div>
@@ -122,10 +122,10 @@ export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSes
 
   if (isComplete) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 dark:bg-slate-900 p-4">
-        <h2 className="text-3xl font-bold text-center text-slate-800 dark:text-white">Deck Complete!</h2>
-        <p className="text-slate-500 mt-2 mb-8">You've reviewed all due cards for this session.</p>
-        <button onClick={handleEndSession} className="bg-sky-500 text-white px-6 py-3 rounded-app font-semibold hover:bg-sky-600 transition-colors">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <h2 className="text-3xl font-bold text-center text-text-base">Deck Complete!</h2>
+        <p className="text-text-muted mt-2 mb-8">You've reviewed all due cards for this session.</p>
+        <button onClick={handleEndSession} className="bg-primary text-primary-content px-6 py-3 rounded-app font-semibold hover:bg-primary-hover transition-colors">
           Finish Session
         </button>
       </div>
@@ -135,16 +135,16 @@ export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSes
   const currentCard = sessionQueue[currentIndex];
 
   return (
-    <div className="flex flex-col h-screen bg-slate-100 dark:bg-slate-900">
+    <div className="flex flex-col h-screen bg-background">
       <header className="p-4 flex items-center justify-between">
         <h2 className="font-semibold text-lg">{deck.name}</h2>
-        <button onClick={handleEndSession} className="font-semibold text-sky-500 hover:text-sky-600">
+        <button onClick={handleEndSession} className="font-semibold text-primary hover:text-primary-hover">
           End
         </button>
       </header>
 
-      <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5">
-        <div className="bg-sky-500 h-1.5" style={{ width: `${progress}%`, transition: 'width 0.3s ease' }}></div>
+      <div className="w-full bg-border h-1.5">
+        <div className="bg-primary h-1.5" style={{ width: `${progress}%`, transition: 'width 0.3s ease' }}></div>
       </div>
 
       <main className="flex-1 flex flex-col items-center justify-center p-4">
@@ -159,10 +159,10 @@ export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSes
               <button onClick={() => handleNextCard('again')} className="bg-red-200 text-red-800 dark:bg-red-800/50 dark:text-red-200 py-3 rounded-app font-semibold text-center flex flex-col items-center"><span className="text-sm">&lt;10m</span>Again</button>
               <button onClick={() => handleNextCard('hard')} className="bg-amber-200 text-amber-800 dark:bg-amber-800/50 dark:text-amber-200 py-3 rounded-app font-semibold text-center flex flex-col items-center"><span className="text-sm">~1d</span>Hard</button>
               <button onClick={() => handleNextCard('good')} className="bg-green-200 text-green-800 dark:bg-green-800/50 dark:text-green-200 py-3 rounded-app font-semibold text-center flex flex-col items-center"><span className="text-sm">~2d</span>Good</button>
-              <button onClick={() => handleNextCard('easy')} className="bg-sky-200 text-sky-800 dark:bg-sky-800/50 dark:text-sky-200 py-3 rounded-app font-semibold text-center flex flex-col items-center"><span className="text-sm">~4d</span>Easy</button>
+              <button onClick={() => handleNextCard('easy')} className="bg-primary/20 text-primary-hover dark:bg-primary/30 dark:text-primary py-3 rounded-app font-semibold text-center flex flex-col items-center"><span className="text-sm">~4d</span>Easy</button>
             </div>
         ) : (
-            <button onClick={handleFlip} className="w-full bg-sky-500 text-white py-3 rounded-app font-semibold hover:bg-sky-600 transition-colors">
+            <button onClick={handleFlip} className="w-full bg-primary text-primary-content py-3 rounded-app font-semibold hover:bg-primary-hover transition-colors">
                 Show Answer
             </button>
         )}
