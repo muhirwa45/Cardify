@@ -10,67 +10,113 @@ interface HomeScreenProps {
 
 const Heatmap: React.FC = () => {
     const today = new Date();
+    
+    // Generate the last 365 days
+    const dates = useMemo(() => {
+        return Array.from({ length: 365 }, (_, i) => {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            return date;
+        }).reverse();
+    }, [today.toDateString()]);
 
-    const months = useMemo(() => {
-        const monthData = [];
-        // Generate data for the last 12 months, including the current one
-        for (let i = 11; i >= 0; i--) {
-            const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-            const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
-            const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-            const firstDayOfWeek = date.getDay(); // 0 for Sunday, 1 for Monday...
-
-            const days = [];
-            // Add empty placeholders for days before the 1st of the month
-            for (let j = 0; j < firstDayOfWeek; j++) {
-                days.push(null);
+    // Placeholder data with a better distribution for demonstration
+    const studyData = useMemo(() => {
+        const data = new Map<string, number>();
+        dates.forEach(date => {
+            if (Math.random() > 0.15) { // ~85% of days have some activity
+                data.set(date.toDateString(), Math.random());
             }
+        });
+        return data;
+    }, [dates]);
 
-            // Add actual days
-            for (let j = 1; j <= daysInMonth; j++) {
-                const intensity = Math.random();
-                days.push({
-                    day: j,
-                    intensity: intensity > 0.2 ? Math.min(intensity, 1) : 0,
-                    fullDate: new Date(date.getFullYear(), date.getMonth(), j)
-                });
-            }
-            monthData.push({ monthName, days });
-        }
-        return monthData;
-    }, [today]);
-
-    const getColor = (intensity: number) => {
-        if (intensity === 0) return 'bg-border';
-        if (intensity < 0.4) return 'bg-primary/20';
-        if (intensity < 0.7) return 'bg-primary/60';
-        return 'bg-primary';
+    // Color scale similar to GitHub, with dark mode support
+    const getHeatmapColor = (intensity: number) => {
+        if (intensity === 0) return 'bg-gray-200 dark:bg-slate-800'; // Level 0
+        if (intensity < 0.25) return 'bg-green-200 dark:bg-green-900'; // Level 1
+        if (intensity < 0.5) return 'bg-green-400 dark:bg-green-700'; // Level 2
+        if (intensity < 0.75) return 'bg-green-600 dark:bg-green-500'; // Level 3
+        return 'bg-green-800 dark:bg-green-400'; // Level 4
     };
+    
+    const legendColors = [
+        'bg-gray-200 dark:bg-slate-800',
+        'bg-green-200 dark:bg-green-900',
+        'bg-green-400 dark:bg-green-700',
+        'bg-green-600 dark:bg-green-500',
+        'bg-green-800 dark:bg-green-400',
+    ];
+
+    const firstDayOfWeek = dates[0].getDay();
+    const emptyCells = Array.from({ length: firstDayOfWeek }, (_, i) => <div key={`empty-${i}`} />);
+
+    // Calculate month labels and their positions
+    const monthLabels = useMemo(() => {
+        const labels: { name: string, startColumn: number }[] = [];
+        let lastMonth = -1;
+        dates.forEach((date, index) => {
+            const month = date.getMonth();
+            if (month !== lastMonth) {
+                const startColumn = Math.floor((index + firstDayOfWeek) / 7);
+                // Prevent labels from bunching up at the start
+                if (labels.length === 0 || startColumn > labels[labels.length - 1].startColumn + 3) {
+                    labels.push({
+                        name: date.toLocaleString('default', { month: 'short' }),
+                        startColumn: startColumn,
+                    });
+                }
+            }
+            lastMonth = month;
+        });
+        return labels;
+    }, [dates, firstDayOfWeek]);
+
 
     return (
-        <div className="space-y-6">
-            {months.map(({ monthName, days }) => (
-                <div key={monthName}>
-                    <h3 className="font-semibold text-sm mb-2 text-text-base">{monthName}</h3>
-                    <div className="grid grid-cols-7 gap-1 text-center text-xs text-text-muted">
-                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => <div key={day}>{day}</div>)}
+        <div className="overflow-x-auto pb-2">
+            <div className="inline-block min-w-full">
+                 <div className="relative h-6 mb-1 ml-9">
+                    {monthLabels.map((month) => (
+                        <div key={month.name} className="absolute text-xs text-text-muted" style={{ left: `${month.startColumn}rem`}}>
+                            {month.name}
+                        </div>
+                    ))}
+                </div>
+                <div className="flex">
+                    <div className="grid grid-rows-7 gap-y-1 text-xs text-text-muted pr-2 shrink-0 self-start text-left w-9">
+                        <div className="h-3"></div>
+                        <div className="h-3 mt-[2px] leading-none">Mon</div>
+                        <div className="h-3"></div>
+                        <div className="h-3 mt-[2px] leading-none">Wed</div>
+                        <div className="h-3"></div>
+                        <div className="h-3 mt-[2px] leading-none">Fri</div>
+                        <div className="h-3"></div>
                     </div>
-                    <div className="grid grid-cols-7 gap-2 mt-2">
-                        {days.map((day, index) => {
-                            if (!day) {
-                                return <div key={`empty-${index}`} />;
-                            }
+                    <div className="grid grid-flow-col grid-rows-7 gap-1">
+                        {emptyCells}
+                        {dates.map((date) => {
+                            const intensity = studyData.get(date.toDateString()) || 0;
                             return (
-                                <div 
-                                    key={day.fullDate.toISOString()} 
-                                    className={`w-full aspect-square rounded-md ${getColor(day.intensity)}`}
-                                    title={`Studied on ${day.fullDate.toDateString()}`}
+                                <div
+                                    key={date.toISOString()}
+                                    className={`w-3 h-3 rounded-sm ${getHeatmapColor(intensity)}`}
+                                    title={`Studied on ${date.toDateString()}`}
                                 />
                             );
                         })}
                     </div>
                 </div>
-            ))}
+                 <div className="flex justify-end items-center mt-2 text-xs text-text-muted pr-1">
+                    <div className="flex items-center gap-1">
+                        <span>Less</span>
+                        {legendColors.map((color, i) => (
+                           <div key={i} className={`w-3 h-3 rounded-sm ${color}`} />
+                        ))}
+                        <span>More</span>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };
