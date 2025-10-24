@@ -74,6 +74,16 @@ const App: React.FC = () => {
       return 'sky';
     }
   });
+  
+  const [showHeatmap, setShowHeatmap] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('flashcard-show-heatmap');
+      return saved ? JSON.parse(saved) : true; // Default to true
+    } catch (error) {
+      console.error("Failed to get heatmap visibility from localStorage", error);
+      return true;
+    }
+  });
 
   useEffect(() => {
     try {
@@ -96,6 +106,14 @@ const App: React.FC = () => {
       console.error("Failed to save theme settings to localStorage", error);
     }
   }, [baseTheme, accentColor]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('flashcard-show-heatmap', JSON.stringify(showHeatmap));
+    } catch (error) {
+      console.error("Failed to save heatmap visibility to localStorage", error);
+    }
+  }, [showHeatmap]);
 
 
   const handleAddDeck = useCallback((newDeck: Deck) => {
@@ -141,7 +159,7 @@ const App: React.FC = () => {
 
     switch (view) {
       case 'home':
-        return <HomeScreen decks={decks} onStartStudy={handleStartStudy} />;
+        return <HomeScreen decks={decks} onStartStudy={handleStartStudy} showHeatmap={showHeatmap} />;
       case 'study':
         return <StudyScreen decks={decks} onAddDeck={handleAddDeck} onUpdateDeck={handleUpdateDeck} onStartStudy={handleStartStudy} onDeleteDeck={handleDeleteDeck} />;
       case 'settings':
@@ -151,10 +169,12 @@ const App: React.FC = () => {
             onBaseThemeChange={setBaseTheme} 
             currentAccentColor={accentColor}
             onAccentColorChange={setAccentColor}
+            showHeatmap={showHeatmap}
+            onShowHeatmapChange={setShowHeatmap}
           />
         );
       default:
-        return <HomeScreen decks={decks} onStartStudy={handleStartStudy} />;
+        return <HomeScreen decks={decks} onStartStudy={handleStartStudy} showHeatmap={showHeatmap} />;
     }
   };
 

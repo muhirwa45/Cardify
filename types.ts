@@ -18,4 +18,4 @@ export interface Deck {
 export type View = 'home' | 'study' | 'settings';
 
 export type BaseTheme = 'light' | 'dark';
-export type AccentColor = 'sky' | 'green' | 'yellow' | 'blue';
+export type AccentColor = 'sky' | 'green' | 'yellow' | 'blue' | 'black';

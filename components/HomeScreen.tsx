@@ -5,28 +5,39 @@ import { BrainCircuitIcon } from './icons/BrainCircuitIcon';
 interface HomeScreenProps {
   decks: Deck[];
   onStartStudy: (deck: Deck) => void;
+  showHeatmap: boolean;
 }
 
 const Heatmap: React.FC = () => {
     const today = new Date();
-    const squares = useMemo(() => {
-        const endDate = new Date(today);
-        // Start of the week is Sunday (day 0)
-        endDate.setDate(endDate.getDate() + (6 - today.getDay())); 
-        const startDate = new Date(endDate);
-        startDate.setDate(startDate.getDate() - 365);
 
-        const days = [];
-        let currentDate = new Date(startDate);
-        while(currentDate <= endDate) {
-            const intensity = Math.random();
-            days.push({
-                date: new Date(currentDate),
-                intensity: intensity > 0.2 ? Math.min(intensity, 1) : 0,
-            });
-            currentDate.setDate(currentDate.getDate() + 1);
+    const months = useMemo(() => {
+        const monthData = [];
+        // Generate data for the last 12 months, including the current one
+        for (let i = 11; i >= 0; i--) {
+            const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const monthName = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+            const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+            const firstDayOfWeek = date.getDay(); // 0 for Sunday, 1 for Monday...
+
+            const days = [];
+            // Add empty placeholders for days before the 1st of the month
+            for (let j = 0; j < firstDayOfWeek; j++) {
+                days.push(null);
+            }
+
+            // Add actual days
+            for (let j = 1; j <= daysInMonth; j++) {
+                const intensity = Math.random();
+                days.push({
+                    day: j,
+                    intensity: intensity > 0.2 ? Math.min(intensity, 1) : 0,
+                    fullDate: new Date(date.getFullYear(), date.getMonth(), j)
+                });
+            }
+            monthData.push({ monthName, days });
         }
-        return days;
+        return monthData;
     }, [today]);
 
     const getColor = (intensity: number) => {
@@ -37,21 +48,29 @@ const Heatmap: React.FC = () => {
     };
 
     return (
-        <div className="flex gap-3 items-stretch">
-            <div className="flex flex-col justify-between text-xs text-text-muted py-1 shrink-0">
-                <span>Mon</span>
-                <span>Wed</span>
-                <span>Fri</span>
-            </div>
-            <div className="grid grid-cols-[repeat(53,minmax(0,1fr))] grid-rows-7 gap-1 w-full">
-                {squares.map(({ date, intensity }, index) => (
-                    <div 
-                        key={index} 
-                        className={`w-full aspect-square rounded-[3px] ${getColor(intensity)}`}
-                        title={`Studied on ${date.toDateString()}`}
-                    />
-                ))}
-            </div>
+        <div className="space-y-6">
+            {months.map(({ monthName, days }) => (
+                <div key={monthName}>
+                    <h3 className="font-semibold text-sm mb-2 text-text-base">{monthName}</h3>
+                    <div className="grid grid-cols-7 gap-1 text-center text-xs text-text-muted">
+                        {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => <div key={day}>{day}</div>)}
+                    </div>
+                    <div className="grid grid-cols-7 gap-2 mt-2">
+                        {days.map((day, index) => {
+                            if (!day) {
+                                return <div key={`empty-${index}`} />;
+                            }
+                            return (
+                                <div 
+                                    key={day.fullDate.toISOString()} 
+                                    className={`w-full aspect-square rounded-md ${getColor(day.intensity)}`}
+                                    title={`Studied on ${day.fullDate.toDateString()}`}
+                                />
+                            );
+                        })}
+                    </div>
+                </div>
+            ))}
         </div>
     );
 };
@@ -139,7 +158,7 @@ const Calendar: React.FC<{ decks: Deck[] }> = ({ decks }) => {
 };
 
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ decks, onStartStudy }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ decks, onStartStudy, showHeatmap }) => {
     const getGreeting = () => {
         const hour = new Date().getHours();
         if (hour < 12) return "Good Morning";
@@ -198,10 +217,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ decks, onStartStudy }) =
                 )}
             </section>
             
-            <section className="bg-card p-4 rounded-app shadow-sm">
-                <h2 className="text-lg font-semibold mb-3 text-text-base">Study Activity</h2>
-                <Heatmap />
-            </section>
+            {showHeatmap && (
+              <section className="bg-card p-4 rounded-app shadow-sm">
+                  <h2 className="text-lg font-semibold mb-3 text-text-base">Study Activity</h2>
+                  <Heatmap />
+              </section>
+            )}
 
             <section>
                 <h2 className="text-lg font-semibold mb-3 text-text-base">Study Calendar</h2>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Deck, Card } from '../types';
 import { updateCardSchedule } from '../services/srsService';
@@ -78,7 +77,7 @@ export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSes
     setIsFlipped(prev => !prev);
   }, [isComplete]);
 
-  const handleNextCard = (rating: Rating) => {
+  const handleNextCard = useCallback((rating: Rating) => {
     const card = sessionQueue[currentIndex];
     if (!card) return;
 
@@ -103,7 +102,36 @@ export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSes
         setIsComplete(true);
       }
     }
-  };
+  }, [currentIndex, sessionQueue, relearningQueue]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+        if (isComplete) return;
+
+        switch (event.key) {
+            case ' ':
+                event.preventDefault(); // prevent scrolling
+                handleFlip();
+                break;
+            case 'Home':
+                event.preventDefault();
+                handleEndSession();
+                break;
+            case 'End':
+                 event.preventDefault();
+                if (isFlipped) {
+                   handleNextCard('good');
+                }
+                break;
+        }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isFlipped, isComplete, handleFlip, handleEndSession, handleNextCard]);
   
   const totalInitialCards = useMemo(() => sessionQueue.length, [sessionQueue]);
   const progress = totalInitialCards > 0 ? ((currentIndex + 1) / totalInitialCards) * 100 : 0;

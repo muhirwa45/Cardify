@@ -7,6 +7,8 @@ interface SettingsScreenProps {
   onBaseThemeChange: (theme: BaseTheme) => void;
   currentAccentColor: AccentColor;
   onAccentColorChange: (color: AccentColor) => void;
+  showHeatmap: boolean;
+  onShowHeatmapChange: (show: boolean) => void;
 }
 
 const accentColors: { id: AccentColor; name: string; colorClass: string }[] = [
@@ -14,13 +16,44 @@ const accentColors: { id: AccentColor; name: string; colorClass: string }[] = [
     { id: 'green', name: 'Green', colorClass: 'bg-green-500' },
     { id: 'yellow', name: 'Yellow', colorClass: 'bg-yellow-500' },
     { id: 'blue', name: 'Blue', colorClass: 'bg-blue-500' },
+    { id: 'black', name: 'Black', colorClass: 'bg-slate-800' },
 ];
+
+const ToggleSwitch: React.FC<{
+  label: string;
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+}> = ({ label, enabled, onChange }) => {
+    return (
+        <div className="flex items-center justify-between">
+            <span className="font-medium text-text-base">{label}</span>
+            <button
+                type="button"
+                onClick={() => onChange(!enabled)}
+                className={`${
+                    enabled ? 'bg-primary' : 'bg-border'
+                } relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background`}
+                role="switch"
+                aria-checked={enabled}
+            >
+                <span
+                    aria-hidden="true"
+                    className={`${
+                        enabled ? 'translate-x-5' : 'translate-x-0'
+                    } pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out`}
+                />
+            </button>
+        </div>
+    );
+};
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ 
   currentBaseTheme, 
   onBaseThemeChange,
   currentAccentColor,
-  onAccentColorChange
+  onAccentColorChange,
+  showHeatmap,
+  onShowHeatmapChange
 }) => {
   return (
     <div className="space-y-8">
@@ -66,6 +99,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({
                         </button>
                     ))}
                 </div>
+            </div>
+
+            <hr className="border-border" />
+
+            <div>
+                <h3 className="text-base font-medium text-text-base mb-3">Home Screen</h3>
+                <ToggleSwitch
+                    label="Show Study Activity Heatmap"
+                    enabled={showHeatmap}
+                    onChange={onShowHeatmapChange}
+                />
             </div>
         </div>
       </section>
