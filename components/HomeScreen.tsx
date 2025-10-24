@@ -9,111 +9,116 @@ interface HomeScreenProps {
 }
 
 const Heatmap: React.FC = () => {
-    const today = new Date();
-    
-    // Generate the last 365 days
-    const dates = useMemo(() => {
-        return Array.from({ length: 365 }, (_, i) => {
-            const date = new Date(today);
-            date.setDate(date.getDate() - i);
-            return date;
-        }).reverse();
-    }, [today.toDateString()]);
+    const [year, setYear] = useState(new Date().getFullYear());
 
-    // Placeholder data with a better distribution for demonstration
+    // Generate days for the selected year
+    const daysInYear = useMemo(() => {
+        const days = [];
+        const date = new Date(year, 0, 1);
+        while (date.getFullYear() === year) {
+            days.push(new Date(date));
+            date.setDate(date.getDate() + 1);
+        }
+        return days;
+    }, [year]);
+
+    // Placeholder study data
     const studyData = useMemo(() => {
         const data = new Map<string, number>();
-        dates.forEach(date => {
+        daysInYear.forEach(date => {
             if (Math.random() > 0.15) { // ~85% of days have some activity
                 data.set(date.toDateString(), Math.random());
             }
         });
         return data;
-    }, [dates]);
+    }, [daysInYear]);
 
-    // Color scale similar to GitHub, with dark mode support
+    // Color scale using theme's primary color
     const getHeatmapColor = (intensity: number) => {
-        if (intensity === 0) return 'bg-gray-200 dark:bg-slate-800'; // Level 0
-        if (intensity < 0.25) return 'bg-green-200 dark:bg-green-900'; // Level 1
-        if (intensity < 0.5) return 'bg-green-400 dark:bg-green-700'; // Level 2
-        if (intensity < 0.75) return 'bg-green-600 dark:bg-green-500'; // Level 3
-        return 'bg-green-800 dark:bg-green-400'; // Level 4
+        if (intensity === 0) return 'bg-border/50 dark:bg-border/20';
+        if (intensity < 0.25) return 'bg-primary/20';
+        if (intensity < 0.5) return 'bg-primary/40';
+        if (intensity < 0.75) return 'bg-primary/70';
+        return 'bg-primary';
     };
-    
-    const legendColors = [
-        'bg-gray-200 dark:bg-slate-800',
-        'bg-green-200 dark:bg-green-900',
-        'bg-green-400 dark:bg-green-700',
-        'bg-green-600 dark:bg-green-500',
-        'bg-green-800 dark:bg-green-400',
-    ];
 
-    const firstDayOfWeek = dates[0].getDay();
-    const emptyCells = Array.from({ length: firstDayOfWeek }, (_, i) => <div key={`empty-${i}`} />);
+    // Grid layout calculations
+    const firstDayOfYear = daysInYear[0].getDay(); // 0 for Sunday
+    const emptyCells = Array.from({ length: firstDayOfYear }, (_, i) => <div key={`empty-${i}`} />);
 
-    // Calculate month labels and their positions
+    // Month labels
     const monthLabels = useMemo(() => {
         const labels: { name: string, startColumn: number }[] = [];
         let lastMonth = -1;
-        dates.forEach((date, index) => {
+        daysInYear.forEach((date, index) => {
             const month = date.getMonth();
             if (month !== lastMonth) {
-                const startColumn = Math.floor((index + firstDayOfWeek) / 7);
-                // Prevent labels from bunching up at the start
-                if (labels.length === 0 || startColumn > labels[labels.length - 1].startColumn + 3) {
-                    labels.push({
-                        name: date.toLocaleString('default', { month: 'short' }),
-                        startColumn: startColumn,
-                    });
-                }
+                const startColumn = Math.floor((index + firstDayOfYear) / 7);
+                labels.push({
+                    name: date.toLocaleString('default', { month: 'short' }),
+                    startColumn: startColumn,
+                });
             }
             lastMonth = month;
         });
         return labels;
-    }, [dates, firstDayOfWeek]);
-
+    }, [daysInYear, firstDayOfYear]);
+    
+    const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
-        <div className="overflow-x-auto pb-2">
-            <div className="inline-block min-w-full">
-                 <div className="relative h-6 mb-1 ml-9">
-                    {monthLabels.map((month) => (
-                        <div key={month.name} className="absolute text-xs text-text-muted" style={{ left: `${month.startColumn}rem`}}>
-                            {month.name}
+        <div>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-4">
+                <div>
+                    <h2 className="text-lg font-bold text-text-base">{year}</h2>
+                    <p className="text-sm text-text-muted">Annual Completion Heatmap</p>
+                </div>
+                <div className="flex space-x-1">
+                    <button onClick={() => setYear(y => y - 1)} className="p-1.5 rounded-md hover:bg-background dark:hover:bg-slate-700/50" aria-label="Previous year">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                    </button>
+                    <button onClick={() => setYear(y => y + 1)} className="p-1.5 rounded-md hover:bg-background dark:hover:bg-slate-700/50" aria-label="Next year">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            {/* Heatmap Grid */}
+            <div className="overflow-x-auto pb-2">
+                <div className="inline-block min-w-full">
+                    <div className="flex">
+                        {/* Day labels */}
+                        <div className="grid grid-rows-7 gap-y-1 text-xs text-text-muted pr-2 shrink-0 self-start text-left w-10">
+                           {dayLabels.map(day => <div key={day} className="h-5 flex items-center">{day}</div>)}
                         </div>
-                    ))}
-                </div>
-                <div className="flex">
-                    <div className="grid grid-rows-7 gap-y-1 text-xs text-text-muted pr-2 shrink-0 self-start text-left w-9">
-                        <div className="h-3"></div>
-                        <div className="h-3 mt-[2px] leading-none">Mon</div>
-                        <div className="h-3"></div>
-                        <div className="h-3 mt-[2px] leading-none">Wed</div>
-                        <div className="h-3"></div>
-                        <div className="h-3 mt-[2px] leading-none">Fri</div>
-                        <div className="h-3"></div>
-                    </div>
-                    <div className="grid grid-flow-col grid-rows-7 gap-1">
-                        {emptyCells}
-                        {dates.map((date) => {
-                            const intensity = studyData.get(date.toDateString()) || 0;
-                            return (
-                                <div
-                                    key={date.toISOString()}
-                                    className={`w-3 h-3 rounded-sm ${getHeatmapColor(intensity)}`}
-                                    title={`Studied on ${date.toDateString()}`}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-                 <div className="flex justify-end items-center mt-2 text-xs text-text-muted pr-1">
-                    <div className="flex items-center gap-1">
-                        <span>Less</span>
-                        {legendColors.map((color, i) => (
-                           <div key={i} className={`w-3 h-3 rounded-sm ${color}`} />
-                        ))}
-                        <span>More</span>
+                        
+                        {/* Main grid area */}
+                        <div className="relative">
+                            {/* Grid cells */}
+                            <div className="grid grid-flow-col grid-rows-7 gap-1">
+                                {emptyCells}
+                                {daysInYear.map((date) => {
+                                    const intensity = studyData.get(date.toDateString()) || 0;
+                                    return (
+                                        <div
+                                            key={date.toISOString()}
+                                            className={`w-5 h-5 rounded-md ${getHeatmapColor(intensity)}`}
+                                            title={`Studied on ${date.toDateString()}`}
+                                        />
+                                    );
+                                })}
+                            </div>
+
+                            {/* Month labels */}
+                             <div className="relative h-4 mt-2 ml-1">
+                                {monthLabels.map((month) => (
+                                    <div key={month.name} className="absolute text-xs text-text-muted" style={{ left: `calc(${month.startColumn} * (1.25rem + 4px))`}}>
+                                        {month.name}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -265,7 +270,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ decks, onStartStudy, sho
             
             {showHeatmap && (
               <section className="bg-card p-4 rounded-app shadow-sm">
-                  <h2 className="text-lg font-semibold mb-3 text-text-base">Study Activity</h2>
                   <Heatmap />
               </section>
             )}
