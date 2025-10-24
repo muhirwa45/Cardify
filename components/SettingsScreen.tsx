@@ -1,59 +1,72 @@
-
 import React from 'react';
-import type { Theme } from '../types';
+import type { BaseTheme, AccentColor } from '../types';
 import { CheckIcon } from './icons/CheckIcon';
 
 interface SettingsScreenProps {
-  currentTheme: Theme;
-  onThemeChange: (theme: Theme) => void;
+  currentBaseTheme: BaseTheme;
+  onBaseThemeChange: (theme: BaseTheme) => void;
+  currentAccentColor: AccentColor;
+  onAccentColorChange: (color: AccentColor) => void;
 }
 
-const themes: { id: Theme; name: string; colors: string[] }[] = [
-  { id: 'light', name: 'Light', colors: ['bg-slate-100', 'bg-white', 'bg-sky-500'] },
-  { id: 'dark', name: 'Dark', colors: ['bg-slate-900', 'bg-slate-800', 'bg-sky-400'] },
-  { id: 'green', name: 'Green', colors: ['bg-slate-100', 'bg-white', 'bg-green-500'] },
-  { id: 'yellow', name: 'Yellow', colors: ['bg-slate-100', 'bg-white', 'bg-yellow-500'] },
-  { id: 'dark-blue', name: 'Dark Blue', colors: ['bg-slate-900', 'bg-slate-800', 'bg-blue-400'] },
+const accentColors: { id: AccentColor; name: string; colorClass: string }[] = [
+    { id: 'sky', name: 'Sky', colorClass: 'bg-sky-500' },
+    { id: 'green', name: 'Green', colorClass: 'bg-green-500' },
+    { id: 'yellow', name: 'Yellow', colorClass: 'bg-yellow-500' },
+    { id: 'blue', name: 'Blue', colorClass: 'bg-blue-500' },
 ];
 
-export const SettingsScreen: React.FC<SettingsScreenProps> = ({ currentTheme, onThemeChange }) => {
+export const SettingsScreen: React.FC<SettingsScreenProps> = ({ 
+  currentBaseTheme, 
+  onBaseThemeChange,
+  currentAccentColor,
+  onAccentColorChange
+}) => {
   return (
     <div className="space-y-8">
       <h1 className="text-3xl font-bold">Settings</h1>
       
       <section className="bg-card p-6 rounded-app shadow-sm">
-        <h2 className="text-xl font-semibold mb-4 text-text-base">Theme</h2>
+        <h2 className="text-xl font-semibold mb-4 text-text-base">Appearance</h2>
         <p className="text-text-muted mb-6">Choose how Cardify looks and feels.</p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {themes.map((theme) => (
-            <button
-              key={theme.id}
-              onClick={() => onThemeChange(theme.id)}
-              aria-pressed={currentTheme === theme.id}
-              className="group focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:ring-primary rounded-app"
-            >
-              <div className="relative border-2 rounded-app p-2 transition-colors"
-                style={{ borderColor: currentTheme === theme.id ? 'rgb(var(--color-primary))' : 'rgb(var(--color-border))' }}
-              >
-                <div className="aspect-[4/3] rounded-md overflow-hidden">
-                  <div className={`w-full h-full flex flex-col ${theme.colors[0]}`}>
-                    <div className="flex-1 p-2 flex justify-end">
-                      <div className={`w-6 h-6 rounded-full ${theme.colors[2]}`}></div>
-                    </div>
-                    <div className={`flex-grow ${theme.colors[1]} m-2 rounded`}></div>
-                  </div>
+        <div className="space-y-6">
+            <div>
+                <label htmlFor="theme-select" className="block text-sm font-medium text-text-muted mb-2">
+                    Theme
+                </label>
+                <select
+                    id="theme-select"
+                    value={currentBaseTheme}
+                    onChange={(e) => onBaseThemeChange(e.target.value as BaseTheme)}
+                    className="w-full max-w-xs px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+                >
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+            
+            <div>
+                <label className="block text-sm font-medium text-text-muted mb-2">
+                    Accent Color
+                </label>
+                <div className="flex space-x-3">
+                    {accentColors.map((color) => (
+                        <button
+                            key={color.id}
+                            onClick={() => onAccentColorChange(color.id)}
+                            aria-label={`Set accent color to ${color.name}`}
+                            className={`w-10 h-10 rounded-full ${color.colorClass} transition-transform duration-200 ease-in-out transform hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:ring-primary`}
+                        >
+                           {currentAccentColor === color.id && (
+                               <div className="w-full h-full bg-black/30 rounded-full flex items-center justify-center">
+                                   <CheckIcon className="w-6 h-6 text-white" />
+                               </div>
+                           )}
+                        </button>
+                    ))}
                 </div>
-                <h3 className="text-sm font-semibold mt-2 text-text-base text-center">{theme.name}</h3>
-
-                {currentTheme === theme.id && (
-                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-content border-2 border-background">
-                    <CheckIcon className="w-4 h-4" />
-                  </div>
-                )}
-              </div>
-            </button>
-          ))}
+            </div>
         </div>
       </section>
     </div>

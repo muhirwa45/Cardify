@@ -1,4 +1,3 @@
-
 export interface Card {
   id: string;
   front: string;
@@ -18,4 +17,5 @@ export interface Deck {
 
 export type View = 'home' | 'study' | 'settings';
 
-export type Theme = 'light' | 'dark' | 'green' | 'yellow' | 'dark-blue';
+export type BaseTheme = 'light' | 'dark';
+export type AccentColor = 'sky' | 'green' | 'yellow' | 'blue';

@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
-import type { Deck, Card, View, Theme } from './types';
+import type { Deck, Card, View, BaseTheme, AccentColor } from './types';
 import { HomeScreen } from './components/HomeScreen';
 import { StudyScreen } from './components/StudyScreen';
 import { SettingsScreen } from './components/SettingsScreen';
@@ -43,13 +42,36 @@ const App: React.FC = () => {
   });
   const [view, setView] = useState<View>('home');
   const [activeStudyDeck, setActiveStudyDeck] = useState<Deck | null>(null);
-  const [theme, setTheme] = useState<Theme>(() => {
+
+  const [baseTheme, setBaseTheme] = useState<BaseTheme>(() => {
     try {
-      const savedTheme = localStorage.getItem('flashcard-theme');
-      return (savedTheme as Theme) || 'light';
-    } catch (error) {
-      console.error("Failed to parse theme from localStorage", error);
+      const savedBase = localStorage.getItem('flashcard-base-theme') as BaseTheme;
+      if (savedBase) return savedBase;
+      
+      const savedOldTheme = localStorage.getItem('flashcard-theme');
+      if (savedOldTheme === 'dark' || savedOldTheme === 'dark-blue') return 'dark';
+      
       return 'light';
+    } catch (error) {
+      console.error("Failed to get base theme from localStorage", error);
+      return 'light';
+    }
+  });
+
+  const [accentColor, setAccentColor] = useState<AccentColor>(() => {
+    try {
+      const savedAccent = localStorage.getItem('flashcard-accent-color') as AccentColor;
+      if (savedAccent) return savedAccent;
+
+      const savedOldTheme = localStorage.getItem('flashcard-theme');
+      if (savedOldTheme === 'green') return 'green';
+      if (savedOldTheme === 'yellow') return 'yellow';
+      if (savedOldTheme === 'dark-blue') return 'blue';
+      
+      return 'sky';
+    } catch (error) {
+      console.error("Failed to get accent color from localStorage", error);
+      return 'sky';
     }
   });
 
@@ -63,35 +85,17 @@ const App: React.FC = () => {
 
   useEffect(() => {
     try {
-      localStorage.setItem('flashcard-theme', theme);
-      const root = window.document.documentElement;
+      localStorage.setItem('flashcard-base-theme', baseTheme);
+      localStorage.setItem('flashcard-accent-color', accentColor);
       
-      root.classList.remove('dark');
-      root.removeAttribute('data-theme');
+      const root = window.document.documentElement;
+      root.classList.toggle('dark', baseTheme === 'dark');
+      root.setAttribute('data-accent', accentColor);
 
-      switch(theme) {
-        case 'dark':
-          root.classList.add('dark');
-          break;
-        case 'dark-blue':
-          root.classList.add('dark');
-          root.setAttribute('data-theme', 'dark-blue');
-          break;
-        case 'green':
-          root.setAttribute('data-theme', 'green');
-          break;
-        case 'yellow':
-          root.setAttribute('data-theme', 'yellow');
-          break;
-        case 'light':
-        default:
-          // 'light' is the default, no class or attribute needed
-          break;
-      }
     } catch (error) {
-      console.error("Failed to save theme to localStorage", error);
+      console.error("Failed to save theme settings to localStorage", error);
     }
-  }, [theme]);
+  }, [baseTheme, accentColor]);
 
 
   const handleAddDeck = useCallback((newDeck: Deck) => {
@@ -141,7 +145,14 @@ const App: React.FC = () => {
       case 'study':
         return <StudyScreen decks={decks} onAddDeck={handleAddDeck} onUpdateDeck={handleUpdateDeck} onStartStudy={handleStartStudy} onDeleteDeck={handleDeleteDeck} />;
       case 'settings':
-        return <SettingsScreen currentTheme={theme} onThemeChange={setTheme} />;
+        return (
+          <SettingsScreen 
+            currentBaseTheme={baseTheme} 
+            onBaseThemeChange={setBaseTheme} 
+            currentAccentColor={accentColor}
+            onAccentColorChange={setAccentColor}
+          />
+        );
       default:
         return <HomeScreen decks={decks} onStartStudy={handleStartStudy} />;
     }
