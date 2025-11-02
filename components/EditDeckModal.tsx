@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import type { Deck, Card } from '../types';
+import { TrashIcon } from './icons/TrashIcon';
+import { PlusIcon } from './icons/PlusIcon';
 
 interface EditDeckModalProps {
   isOpen: boolean;
@@ -9,49 +11,58 @@ interface EditDeckModalProps {
   onSave: (updatedDeck: Deck) => void;
 }
 
+// Use a temporary type for cards in state to handle new, unsaved cards
+type EditableCard = Partial<Card> & { front: string; back: string };
+
 export const EditDeckModal: React.FC<EditDeckModalProps> = ({ isOpen, onClose, deck, onSave }) => {
   const [deckName, setDeckName] = useState('');
-  const [cardsText, setCardsText] = useState('');
+  const [cards, setCards] = useState<EditableCard[]>([]);
 
   useEffect(() => {
     if (deck) {
       setDeckName(deck.name);
-      setCardsText(deck.cards.map(c => `${c.front};${c.back}`).join('\n'));
+      // Create a deep copy to avoid mutating the original deck state directly
+      setCards(JSON.parse(JSON.stringify(deck.cards)));
     }
   }, [deck]);
 
   if (!isOpen || !deck) return null;
+
+  const handleCardChange = (index: number, field: 'front' | 'back', value: string) => {
+    const newCards = [...cards];
+    newCards[index] = { ...newCards[index], [field]: value };
+    setCards(newCards);
+  };
+
+  const handleAddCard = () => {
+    setCards([...cards, { front: '', back: '', state: 'new' }]);
+  };
+
+  const handleDeleteCard = (index: number) => {
+    setCards(cards.filter((_, i) => i !== index));
+  };
 
   const handleSave = () => {
     if (!deckName.trim()) {
       alert("Please enter a deck name.");
       return;
     }
-    const cardLines = cardsText.split('\n').filter(line => line.trim() !== '');
     
-    const updatedCards: Card[] = cardLines.map((line, index) => {
-      const parts = line.split(';');
-      const front = parts[0]?.trim() || '';
-      const back = parts.slice(1).join(';').trim() || '';
-      
-      // Try to find the original card to preserve its ID and SRS state.
-      // This is a simple match; a more robust solution might use a unique key if card content can be edited.
-      const originalCard = deck.cards.find(c => c.front === front && c.back === back);
-      
-      return {
-        id: originalCard?.id || `c-${Date.now()}-${index}`,
-        front,
-        back,
-        state: originalCard?.state || 'new',
-        due: originalCard?.due,
-        interval: originalCard?.interval
-      };
-    });
+    const finalCards: Card[] = cards
+      .filter(card => card.front.trim() || card.back.trim()) // Remove empty cards
+      .map((card, index) => ({
+        id: card.id || `c-${Date.now()}-${index}`,
+        front: card.front.trim(),
+        back: card.back.trim(),
+        state: card.state || 'new',
+        due: card.due,
+        interval: card.interval
+      }));
 
     const updatedDeck: Deck = {
       ...deck,
       name: deckName,
-      cards: updatedCards,
+      cards: finalCards,
     };
     onSave(updatedDeck);
     onClose();
@@ -74,17 +85,41 @@ export const EditDeckModal: React.FC<EditDeckModalProps> = ({ isOpen, onClose, d
               className="w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
             />
           </div>
-          <div>
-            <label htmlFor="editCardsText" className="block text-sm font-medium text-text-muted mb-1">Cards (front;back)</label>
-            <textarea
-              id="editCardsText"
-              value={cardsText}
-              onChange={(e) => setCardsText(e.target.value)}
-              rows={15}
-              className="w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm"
-              placeholder="Question;Answer"
-            />
-            <p className="text-xs text-text-muted mt-1">One card per line, separated by a semicolon (;).</p>
+          
+          <div className="space-y-3">
+             <label className="block text-sm font-medium text-text-muted">Cards</label>
+             {cards.map((card, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-2 items-start">
+                    <textarea
+                        value={card.front}
+                        onChange={(e) => handleCardChange(index, 'front', e.target.value)}
+                        placeholder={`Front ${index + 1}`}
+                        rows={2}
+                        className="w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm resize-y"
+                    />
+                    <textarea
+                        value={card.back}
+                        onChange={(e) => handleCardChange(index, 'back', e.target.value)}
+                        placeholder={`Back ${index + 1}`}
+                        rows={2}
+                        className="w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm resize-y"
+                    />
+                     <button 
+                        onClick={() => handleDeleteCard(index)} 
+                        className="p-2.5 rounded-md text-text-muted hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-400 self-center justify-self-end md:justify-self-center"
+                        aria-label="Delete card"
+                     >
+                        <TrashIcon className="w-5 h-5" />
+                    </button>
+                </div>
+            ))}
+             <button
+                onClick={handleAddCard}
+                className="w-full flex items-center justify-center space-x-2 px-4 py-2 mt-2 border-2 border-dashed border-border rounded-app text-text-muted hover:border-primary hover:text-primary transition-colors"
+             >
+                <PlusIcon className="w-5 h-5" />
+                <span>Add Card</span>
+            </button>
           </div>
         </div>
         <div className="p-4 bg-background dark:bg-card/50 rounded-b-app flex justify-end space-x-3">

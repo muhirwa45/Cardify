@@ -125,9 +125,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleDeleteDeck = useCallback((deckId: string) => {
-    if (window.confirm("Are you sure you want to delete this deck? This action cannot be undone.")) {
-      setDecks(prevDecks => prevDecks.filter(deck => deck.id !== deckId));
-    }
+    setDecks(prevDecks => prevDecks.filter(deck => deck.id !== deckId));
   }, []);
   
   const handleStartStudy = useCallback((deck: Deck) => {

@@ -8,6 +8,7 @@ import { TrashIcon } from './icons/TrashIcon';
 import { ImportDeckModal } from './ImportDeckModal';
 import { UploadIcon } from './icons/UploadIcon';
 import { SearchIcon } from './icons/SearchIcon';
+import { ConfirmationModal } from './ConfirmationModal';
 
 const colorOptions = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-yellow-500', 
@@ -119,10 +120,26 @@ export const StudyScreen: React.FC<StudyScreenProps> = ({ decks, onAddDeck, onUp
   const [isImportModalOpen, setImportModalOpen] = useState(false);
   const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
 
   const filteredDecks = decks.filter(deck =>
     deck.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
+  const handleInitiateDelete = (deck: Deck) => {
+    setDeckToDelete(deck);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deckToDelete) {
+      onDeleteDeck(deckToDelete.id);
+      setDeckToDelete(null);
+    }
+  };
+  
+  const handleCancelDelete = () => {
+    setDeckToDelete(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -179,7 +196,7 @@ export const StudyScreen: React.FC<StudyScreenProps> = ({ decks, onAddDeck, onUp
                             <button onClick={() => setEditingDeck(deck)} className="p-2 rounded-full text-text-muted hover:bg-background dark:hover:bg-border" aria-label="Edit deck">
                                 <PencilIcon className="w-5 h-5" />
                             </button>
-                            <button onClick={() => onDeleteDeck(deck.id)} className="p-2 rounded-full text-text-muted hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-400" aria-label="Delete deck">
+                            <button onClick={() => handleInitiateDelete(deck)} className="p-2 rounded-full text-text-muted hover:bg-red-100 dark:hover:bg-red-900/50 hover:text-red-600 dark:hover:text-red-400" aria-label="Delete deck">
                                 <TrashIcon className="w-5 h-5" />
                             </button>
                         </div>
@@ -233,6 +250,19 @@ export const StudyScreen: React.FC<StudyScreenProps> = ({ decks, onAddDeck, onUp
         onClose={() => setEditingDeck(null)}
         deck={editingDeck}
         onSave={onUpdateDeck}
+      />
+
+      <ConfirmationModal
+        isOpen={!!deckToDelete}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Deck"
+        message={
+            <>
+              Are you sure you want to permanently delete the deck "<strong>{deckToDelete?.name}</strong>"? This action cannot be undone.
+            </>
+        }
+        confirmButtonText="Delete"
       />
     </div>
   );

@@ -52,7 +52,18 @@ Cardify is a modern, offline-first flashcard application designed for efficient 
     ```
 6.  Once the file is successfully parsed, click **Import Deck**.
 
-### 3. Studying a Deck
+### 3. Editing a Deck or Cards
+
+1.  Navigate to the **Study** tab.
+2.  Find the deck you wish to edit and click the **pencil icon**.
+3.  In the modal, you can:
+    -   Change the deck's name.
+    -   Edit the front or back of any existing card.
+    -   Delete a card by clicking the **trash icon** next to it.
+    -   Add a new card by clicking the **Add Card** button.
+4.  Click **Save Changes** to update the deck.
+
+### 4. Studying a Deck
 
 1.  From the **Home** or **Study** tab, find the deck you want to review.
 2.  Click the **Study** or **Study Now** button.
@@ -61,7 +72,7 @@ Cardify is a modern, offline-first flashcard application designed for efficient 
 5.  Rate your recall of the answer using one of the four options: **Again, Hard, Good,** or **Easy**. The SRS algorithm will use your rating to schedule the next review for that card.
 6.  Continue until you've completed the session!
 
-### 4. Customizing the Theme
+### 5. Customizing the Theme
 
 1.  Navigate to the **Settings** tab.
 2.  Click on any of the available themes to instantly change the application's appearance. Your preference is saved automatically.
