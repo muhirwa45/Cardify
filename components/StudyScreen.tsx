@@ -18,6 +18,20 @@ const colorOptions = [
 ];
 const getRandomColor = () => colorOptions[Math.floor(Math.random() * colorOptions.length)];
 
+const parseCardLine = (line: string) => {
+  const firstColon = line.indexOf(':');
+  if (firstColon > 0) {
+    return [line.slice(0, firstColon).trim(), line.slice(firstColon + 1).trim()];
+  }
+
+  const firstSemicolon = line.indexOf(';');
+  if (firstSemicolon > 0) {
+    return [line.slice(0, firstSemicolon).trim(), line.slice(firstSemicolon + 1).trim()];
+  }
+
+  return [line.trim(), ''];
+};
+
 interface CreateDeckModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -26,6 +40,8 @@ interface CreateDeckModalProps {
 
 const CreateDeckModal: React.FC<CreateDeckModalProps> = ({ isOpen, onClose, onSave }) => {
     const [deckName, setDeckName] = useState('');
+    const [deckIcon, setDeckIcon] = useState('📘');
+    const [deckDescription, setDeckDescription] = useState('');
     const [cardsText, setCardsText] = useState('');
 
     if (!isOpen) return null;
@@ -37,21 +53,22 @@ const CreateDeckModal: React.FC<CreateDeckModalProps> = ({ isOpen, onClose, onSa
         }
         const cardLines = cardsText.split('\n').filter(line => line.trim() !== '');
         const newCards: Card[] = cardLines.map((line, index) => {
-            const parts = line.split(';');
-            const front = parts[0]?.trim() || '';
-            const back = parts.slice(1).join(';').trim() || '';
+            const [front, back] = parseCardLine(line);
             return {
                 id: `c-${Date.now()}-${index}`,
                 front,
                 back,
                 state: 'new'
             };
-        });
+        }).filter(card => card.front.trim());
         const newDeck: Deck = {
             id: `d-${Date.now()}`,
             name: deckName,
             cards: newCards,
             color: getRandomColor(),
+            icon: deckIcon || '📘',
+            description: deckDescription.trim(),
+            createdAt: new Date().toISOString(),
         };
         onSave(newDeck);
         handleClose();
@@ -59,6 +76,8 @@ const CreateDeckModal: React.FC<CreateDeckModalProps> = ({ isOpen, onClose, onSa
 
     const handleClose = () => {
         setDeckName('');
+        setDeckIcon('📘');
+        setDeckDescription('');
         setCardsText('');
         onClose();
     }
@@ -80,17 +99,41 @@ const CreateDeckModal: React.FC<CreateDeckModalProps> = ({ isOpen, onClose, onSa
                             className="w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
                         />
                     </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                        <div>
+                            <label htmlFor="deckIcon" className="block text-sm font-medium text-text-muted mb-1">Icon</label>
+                            <input
+                                id="deckIcon"
+                                type="text"
+                                value={deckIcon}
+                                onChange={(e) => setDeckIcon(e.target.value)}
+                                className="w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                                placeholder="📘"
+                                maxLength={3}
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="deckDescription" className="block text-sm font-medium text-text-muted mb-1">Description (optional)</label>
+                            <input
+                                id="deckDescription"
+                                type="text"
+                                value={deckDescription}
+                                onChange={(e) => setDeckDescription(e.target.value)}
+                                className="w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary"
+                            />
+                        </div>
+                    </div>
                     <div>
-                        <label htmlFor="newCardsText" className="block text-sm font-medium text-text-muted mb-1">Cards (front;back)</label>
+                        <label htmlFor="newCardsText" className="block text-sm font-medium text-text-muted mb-1">Cards (front:back)</label>
                         <textarea
                             id="newCardsText"
                             value={cardsText}
                             onChange={(e) => setCardsText(e.target.value)}
                             rows={10}
                             className="w-full px-3 py-2 bg-background border border-border rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary font-mono text-sm"
-                            placeholder="Question;Answer"
+                            placeholder="heart:pumps blood"
                         />
-                        <p className="text-xs text-text-muted mt-1">One card per line, separated by a semicolon (;).</p>
+                        <p className="text-xs text-text-muted mt-1">One card per line. Use front:back (fast mode) or front;back.</p>
                     </div>
                 </div>
                 <div className="p-4 bg-background dark:bg-card/50 rounded-b-app flex justify-end space-x-3">
@@ -184,12 +227,13 @@ export const StudyScreen: React.FC<StudyScreenProps> = ({ decks, onAddDeck, onUp
                 <div className="p-4 flex-grow">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center space-x-3">
-                        <div className={`w-12 h-12 rounded-lg ${deck.color} flex items-center justify-center`}>
-                            <BrainCircuitIcon className="w-7 h-7 text-white" />
+                        <div className={`w-12 h-12 rounded-lg ${deck.color} flex items-center justify-center text-xl`}>
+                            {deck.icon || <BrainCircuitIcon className="w-7 h-7 text-white" />}
                         </div>
                         <div>
                             <h3 className="font-bold text-lg text-text-base">{deck.name}</h3>
                             <p className="text-sm text-text-muted">{deck.cards.length} cards</p>
+                            {deck.description && <p className="text-xs text-text-muted mt-1 line-clamp-2">{deck.description}</p>}
                         </div>
                         </div>
                         <div className="flex space-x-1">
