@@ -13,9 +13,18 @@ export interface Deck {
   name: string;
   cards: Card[];
   color: string;
+  icon?: string;
+  description?: string;
+  createdAt?: string;
+  lastStudiedAt?: string;
 }
 
-export type View = 'home' | 'study' | 'settings';
+export interface StudyLogEntry {
+  date: string; // YYYY-MM-DD
+  cardsStudied: number;
+}
+
+export type View = 'home' | 'study' | 'stats' | 'settings';
 
 export type BaseTheme = 'light' | 'dark';
 export type AccentColor = 'sky' | 'green' | 'yellow' | 'blue' | 'black';

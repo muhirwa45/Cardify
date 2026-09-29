@@ -4,6 +4,7 @@ import type { View } from '../types';
 import { HomeIcon } from './icons/HomeIcon';
 import { BookOpenIcon } from './icons/BookOpenIcon';
 import { CogIcon } from './icons/CogIcon';
+import { ChartBarIcon } from './icons/ChartBarIcon';
 
 interface BottomNavProps {
   activeView: View;
@@ -42,6 +43,12 @@ export const BottomNav: React.FC<BottomNavProps> = ({ activeView, setView }) => 
           icon={<BookOpenIcon className="w-6 h-6 mb-1" />}
           isActive={activeView === 'study'}
           onClick={() => setView('study')}
+        />
+        <NavItem
+          label="Stats"
+          icon={<ChartBarIcon className="w-6 h-6 mb-1" />}
+          isActive={activeView === 'stats'}
+          onClick={() => setView('stats')}
         />
         <NavItem
           label="Settings"

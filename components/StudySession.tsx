@@ -34,9 +34,10 @@ interface StudySessionProps {
   deck: Deck;
   onClose: () => void;
   onSessionComplete: (deckId: string, updatedCards: Card[]) => void;
+  onCardsReviewed: (count: number) => void;
 }
 
-export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSessionComplete }) => {
+export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSessionComplete, onCardsReviewed }) => {
   const [sessionQueue, setSessionQueue] = useState<Card[]>([]);
   const [relearningQueue, setRelearningQueue] = useState<Card[]>([]);
   const [updatedCards, setUpdatedCards] = useState<Map<string, Card>>(new Map());
@@ -83,6 +84,7 @@ export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSes
 
     const updatedCard = updateCardSchedule(card, rating);
     setUpdatedCards(prev => new Map(prev).set(updatedCard.id, updatedCard));
+    onCardsReviewed(1);
 
     if (rating === 'again') {
         setRelearningQueue(prev => [...prev, updatedCard]);
@@ -102,7 +104,7 @@ export const StudySession: React.FC<StudySessionProps> = ({ deck, onClose, onSes
         setIsComplete(true);
       }
     }
-  }, [currentIndex, sessionQueue, relearningQueue]);
+  }, [currentIndex, onCardsReviewed, relearningQueue, sessionQueue]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
